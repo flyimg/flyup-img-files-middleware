@@ -1,0 +1,26 @@
+{
+    "name": "flyup",
+    "version": "1.0.0",
+    "description": "Image upload server, front and back end.",
+    "main": "server/app.js",
+    "scripts": {
+        "start": "nodemon server/app.js -w server/",
+        "nmh": "nodemon -h",
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "keywords": [
+        "img",
+        "image",
+        "upload",
+        "flyimg"
+    ],
+    "author": "B. Agustin Amenabar L.",
+    "license": "ISC",
+    "dependencies": {
+        "express": "^4.16.3",
+        "multer": "^1.3.0"
+    },
+    "devDependencies": {
+        "nodemon": "^1.17.5"
+    }
+}
