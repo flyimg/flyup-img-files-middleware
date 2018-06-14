@@ -6,11 +6,14 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>Upload and Fly! - FlyUp</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" type="text/css" media="screen" href="main.css" />
+    <link rel="stylesheet" type="text/css" media="screen" href="styles/dropzone.css" />
+    <link rel="stylesheet" type="text/css" media="screen" href="styles/main.css" />
 </head>
 
 <body>
-    <form class="file-form dropzone" action="/upload" method="post" enctype="multipart/form-data" id="upload-form-zone"></form>
+    <form class="file-form dropzone" action="/upload" method="post" enctype="multipart/form-data" id="upload-form-zone">
+        <button type="button" class="dz-message browse-button">Dragg in or click to add files</button>
+    </form>
     <script src="js/dropzone.js"></script>
     <script src="js/scripts.js"></script>
 </body>

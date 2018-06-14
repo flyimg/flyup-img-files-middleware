@@ -59,10 +59,20 @@ app.use(express.static("server/static"));
 
 app.post("/upload", upHandler.single("uploaded_file"), (req, res) => {
     //res.status(201).send({ path: "some-path-will-be-here.jpg" });
-    res.sendStatus(201);
+    if (!req.file || !getExtensionFromAcceptedMimeType(req.file.mimetype)) {
+        return res.status(422).json({
+            error: "The uploaded file must be an image",
+        });
+    } else {
+        res.sendStatus(201);
+    }
 });
 
-app.get("/media/{folderPath}", (req, res) => {});
+app.get("/media/*", (req, res) => {
+    console.log("getting media path!");
+    console.log("path:", req.url);
+    res.status(200).send("listing.... for" + req.url);
+});
 
 app.listen(3000);
 console.log("Listening on port 3000");
