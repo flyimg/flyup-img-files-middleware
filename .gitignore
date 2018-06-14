@@ -1,3 +1,7 @@
+## Project specifics
+/uploads
+
+## dev envrionment generics
 # Logs
 logs
 *.log
