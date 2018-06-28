@@ -1,6 +1,9 @@
 const express = require("express");
 const multer = require("multer");
+const cors = require("cors");
 const morgan = require("morgan");
+const glob = require("glob");
+const fs = require("fs");
 
 const uploadableTypes = {
     png: "image/png",
@@ -52,12 +55,27 @@ const upHandler = multer({
     }),
 });
 
+/** configure CORS */
+const originsWhitelist = [
+    "http://localhost:4200", //this is my front-end url for development
+    "http://no.clue.yet",
+];
+const corsOptions = {
+    origin: (origin, callback) => {
+        const isWhitelisted = originsWhitelist.indexOf(origin) !== -1;
+        callback(null, isWhitelisted);
+    },
+    credentials: true,
+};
+
 const app = express();
 
 app.use(morgan("dev"));
+// body parser should go here
+app.use(cors(corsOptions));
 app.use(express.static("server/static"));
 
-app.post("/upload", upHandler.single("uploaded_file"), (req, res) => {
+app.post("/api/upload", upHandler.single("uploaded_file"), (req, res) => {
     //res.status(201).send({ path: "some-path-will-be-here.jpg" });
     if (!req.file || !getExtensionFromAcceptedMimeType(req.file.mimetype)) {
         return res.status(422).json({
@@ -68,10 +86,23 @@ app.post("/upload", upHandler.single("uploaded_file"), (req, res) => {
     }
 });
 
-app.get("/media/*", (req, res) => {
+// this should be configurable
+app.get("/api/media/*", (req, res) => {
     console.log("getting media path!");
     console.log("path:", req.url);
-    res.status(200).send("listing.... for" + req.url);
+    // match one or more of these patterns
+    glob("uploads/*.*", (err, files) => {
+        res.status(200).json(
+            files.map(file => {
+                const fileStat = fs.statSync(file);
+                return {
+                    mtime: fileStat.mtime,
+                    name: file,
+                    size: fileStat.size,
+                };
+            })
+        ); //.send("listing.... for" + req.url);
+    });
 });
 
 app.listen(3000);
