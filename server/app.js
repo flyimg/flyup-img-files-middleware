@@ -12,6 +12,8 @@ const uploadableTypes = {
     webp: "image/webp",
 };
 
+const STORAGE_FOLDER = "uploads/";
+
 /**
  * This returns an extension for a given filetype, if it's on the list of accepted types
  * @param {string} mimetype
@@ -35,7 +37,7 @@ const upHandler = multer({
     },
     storage: multer.diskStorage({
         destination: (req, file, cb) => {
-            cb(null, "uploads/");
+            cb(null, STORAGE_FOLDER);
         },
         filename: (req, file, cb) => {
             const mimetype = file.mimetype;
@@ -46,9 +48,9 @@ const upHandler = multer({
                 );
             let filename = file.originalname;
             filename +=
-                filename.substr(-extension.length) === extension
-                    ? ""
-                    : extension;
+                filename.substr(-extension.length) === extension ?
+                "" :
+                extension;
             console.log("will save to ", filename);
             cb(null, filename);
         },
@@ -70,7 +72,7 @@ const corsOptions = {
 
 const app = express();
 
-app.use(morgan("dev"));
+app.use(morgan("dev")); // <-- this is crashing somehow.
 // body parser should go here
 app.use(cors(corsOptions));
 app.use(express.static("server/static"));
@@ -87,21 +89,29 @@ app.post("/api/upload", upHandler.single("uploaded_file"), (req, res) => {
 });
 
 // this should be configurable
-app.get("/api/media/*", (req, res) => {
+const API_MEDIA_URL = "/api/media/";
+
+app.get(API_MEDIA_URL + "*", (req, res) => {
     console.log("getting media path!");
     console.log("path:", req.url);
+    let maskedPath = req.url.substr(API_MEDIA_URL.length);
+    maskedPath = !maskedPath || maskedPath.substr(-1) === '/' ? maskedPath : maskedPath + '/';
+    console.log("clean path:", maskedPath);
+
     // match one or more of these patterns
-    glob("uploads/*.*", (err, files) => {
+    glob(maskedPath + "*", {
+        cwd: STORAGE_FOLDER,
+    }, (err, files) => {
         res.status(200).json(
             files.map(file => {
-                const fileStat = fs.statSync(file);
+                const fileStat = fs.statSync(STORAGE_FOLDER + file);
                 return {
                     mtime: fileStat.mtime,
                     name: file,
                     size: fileStat.size,
                 };
             })
-        ); //.send("listing.... for" + req.url);
+        );
     });
 });
 
