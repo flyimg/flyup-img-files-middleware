@@ -5,14 +5,16 @@ const morgan = require("morgan");
 const glob = require("glob");
 const fs = require("fs");
 
+// These should be coming from some config ir ENV var.
+const API_MEDIA_URL = "/api/media/";
+const STORAGE_FOLDER = "uploads/";
+
 const uploadableTypes = {
     png: "image/png",
     jpg: "image/jpeg",
     gif: "image/gif",
     webp: "image/webp",
 };
-
-const STORAGE_FOLDER = "uploads/";
 
 /**
  * This returns an extension for a given filetype, if it's on the list of accepted types
@@ -48,9 +50,9 @@ const upHandler = multer({
                 );
             let filename = file.originalname;
             filename +=
-                filename.substr(-extension.length) === extension ?
-                "" :
-                extension;
+                filename.substr(-extension.length) === extension
+                    ? ""
+                    : extension;
             console.log("will save to ", filename);
             cb(null, filename);
         },
@@ -72,10 +74,11 @@ const corsOptions = {
 
 const app = express();
 
-app.use(morgan("dev")); // <-- this is crashing somehow.
+app.use(morgan("dev")); // <-- is this doing anything?
 // body parser should go here
 app.use(cors(corsOptions));
 app.use(express.static("server/static"));
+// TODO: add serve-static middleware to serve the static files ( https://github.com/expressjs/serve-static )
 
 app.post("/api/upload", upHandler.single("uploaded_file"), (req, res) => {
     //res.status(201).send({ path: "some-path-will-be-here.jpg" });
@@ -88,31 +91,34 @@ app.post("/api/upload", upHandler.single("uploaded_file"), (req, res) => {
     }
 });
 
-// this should be configurable
-const API_MEDIA_URL = "/api/media/";
-
 app.get(API_MEDIA_URL + "*", (req, res) => {
     console.log("getting media path!");
     console.log("path:", req.url);
     let maskedPath = req.url.substr(API_MEDIA_URL.length);
-    maskedPath = !maskedPath || maskedPath.substr(-1) === '/' ? maskedPath : maskedPath + '/';
-    console.log("clean path:", maskedPath);
+    maskedPath =
+        !maskedPath || maskedPath.substr(-1) === "/"
+            ? maskedPath
+            : maskedPath + "/";
 
     // match one or more of these patterns
-    glob(maskedPath + "*", {
-        cwd: STORAGE_FOLDER,
-    }, (err, files) => {
-        res.status(200).json(
-            files.map(file => {
-                const fileStat = fs.statSync(STORAGE_FOLDER + file);
-                return {
-                    mtime: fileStat.mtime,
-                    name: file,
-                    size: fileStat.size,
-                };
-            })
-        );
-    });
+    glob(
+        maskedPath + "*",
+        {
+            cwd: STORAGE_FOLDER,
+        },
+        (err, files) => {
+            res.status(200).json(
+                files.map(file => {
+                    const fileStat = fs.statSync(STORAGE_FOLDER + file);
+                    return {
+                        mtime: fileStat.mtime,
+                        name: file,
+                        size: fileStat.size,
+                    };
+                })
+            );
+        }
+    );
 });
 
 app.listen(3000);
