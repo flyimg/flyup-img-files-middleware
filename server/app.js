@@ -5,6 +5,8 @@ const morgan = require("morgan");
 const glob = require("glob");
 const fs = require("fs");
 
+const stats = require("./stat");
+
 // These should be coming from some config ir ENV var.
 const API_MEDIA_URL = "/api/media/";
 const STORAGE_FOLDER = "uploads/";
@@ -50,9 +52,9 @@ const upHandler = multer({
                 );
             let filename = file.originalname;
             filename +=
-                filename.substr(-extension.length) === extension
-                    ? ""
-                    : extension;
+                filename.substr(-extension.length) === extension ?
+                "" :
+                extension;
             console.log("will save to ", filename);
             cb(null, filename);
         },
@@ -95,25 +97,29 @@ app.get(API_MEDIA_URL + "*", (req, res) => {
     console.log("getting media path!");
     console.log("path:", req.url);
     let maskedPath = req.url.substr(API_MEDIA_URL.length);
-    maskedPath =
-        !maskedPath || maskedPath.substr(-1) === "/"
-            ? maskedPath
-            : maskedPath + "/";
+    maskedPath = !maskedPath || maskedPath.substr(-1) === "/" ?
+        maskedPath :
+        maskedPath + "/";
 
+    if (!stats.isDirectorySync(STORAGE_FOLDER + maskedPath)) {
+        res.status(404).send();
+        return;
+    }
     // match one or more of these patterns
     glob(
-        maskedPath + "*",
-        {
+        maskedPath + "*", {
             cwd: STORAGE_FOLDER,
         },
         (err, files) => {
             res.status(200).json(
                 files.map(file => {
-                    const fileStat = fs.statSync(STORAGE_FOLDER + file);
+                    const relativeStoragePath = STORAGE_FOLDER + file;
+                    const fileStat = fs.statSync(relativeStoragePath);
                     return {
                         mtime: fileStat.mtime,
                         name: file,
                         size: fileStat.size,
+                        ...stats.getMimeTypeAndExtension(relativeStoragePath)
                     };
                 })
             );
