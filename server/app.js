@@ -52,9 +52,9 @@ const upHandler = multer({
                 );
             let filename = file.originalname;
             filename +=
-                filename.substr(-extension.length) === extension ?
-                "" :
-                extension;
+                filename.substr(-extension.length) === extension
+                    ? ""
+                    : extension;
             console.log("will save to ", filename);
             cb(null, filename);
         },
@@ -89,7 +89,7 @@ app.post("/api/upload", upHandler.single("uploaded_file"), (req, res) => {
             error: "The uploaded file must be an image",
         });
     } else {
-        res.sendStatus(201);
+        res.status(201).json({});
     }
 });
 
@@ -97,9 +97,10 @@ app.get(API_MEDIA_URL + "*", (req, res) => {
     console.log("getting media path!");
     console.log("path:", req.url);
     let maskedPath = req.url.substr(API_MEDIA_URL.length);
-    maskedPath = !maskedPath || maskedPath.substr(-1) === "/" ?
-        maskedPath :
-        maskedPath + "/";
+    maskedPath =
+        !maskedPath || maskedPath.substr(-1) === "/"
+            ? maskedPath
+            : maskedPath + "/";
 
     if (!stats.isDirectorySync(STORAGE_FOLDER + maskedPath)) {
         res.status(404).send();
@@ -107,7 +108,8 @@ app.get(API_MEDIA_URL + "*", (req, res) => {
     }
     // match one or more of these patterns
     glob(
-        maskedPath + "*", {
+        maskedPath + "*",
+        {
             cwd: STORAGE_FOLDER,
         },
         (err, files) => {
@@ -119,7 +121,7 @@ app.get(API_MEDIA_URL + "*", (req, res) => {
                         mtime: fileStat.mtime,
                         name: file,
                         size: fileStat.size,
-                        ...stats.getMimeTypeAndExtension(relativeStoragePath)
+                        ...stats.getMimeTypeAndExtension(relativeStoragePath),
                     };
                 })
             );
