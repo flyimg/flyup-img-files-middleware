@@ -1,6 +1,6 @@
-const fs = require("fs");
-const fsPromises = require("fs").promises;
-const mime = require("mime");
+const fs = require('fs');
+const fsPromises = require('fs').promises;
+const mime = require('mime');
 
 /**
  * Util function we will reuse to check if the caught error is simply a "not found" error
@@ -9,7 +9,7 @@ const mime = require("mime");
  * @returns {boolean}
  */
 function isErrorNotFound(err) {
-    return err.code === "ENOENT";
+    return err.code === 'ENOENT';
 }
 
 /**
@@ -98,9 +98,11 @@ function getMimeTypeAndExtension(path) {
         // @todo: try to recognize with the file buffer.
         type = isDirectory_sync(path) ? 'DIRECTORY' : type;
     }
+    let extension = mime.getExtension(type);
+    extension = extension === 'jpeg' ? 'jpg' : extension;
     return {
         type,
-        extension: mime.getExtension(type),
+        extension,
     };
 }
 
@@ -111,4 +113,4 @@ module.exports = {
     isDirectory: isDirectory_asyncAwait,
     isDirectorySync: isDirectory_sync,
     getMimeTypeAndExtension,
-}
+};

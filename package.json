@@ -8,7 +8,8 @@
     "main": "server/app.js",
     "scripts": {
         "start": "nodemon server/app.js -w server/",
-        "test": "echo \"Error: no test specified\" && exit 1"
+        "test": "mocha server/**/*.test.js",
+        "test-watch": "mocha server/**/*.test.js --watch"
     },
     "keywords": [
         "img",
@@ -27,6 +28,8 @@
         "multer": "^1.3.0"
     },
     "devDependencies": {
+        "chai": "^4.1.2",
+        "mocha": "^5.2.0",
         "nodemon": "^1.17.5"
     }
 }
