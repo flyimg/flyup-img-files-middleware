@@ -1,21 +1,21 @@
-const express = require("express");
-const multer = require("multer");
-const cors = require("cors");
-const morgan = require("morgan");
-const glob = require("glob");
-const fs = require("fs");
+const express = require('express');
+const multer = require('multer');
+const cors = require('cors');
+const morgan = require('morgan');
+const glob = require('glob');
+const fs = require('fs');
 
-const stats = require("./stat");
+const stats = require('./stat');
 
 // These should be coming from some config ir ENV var.
-const API_MEDIA_URL = "/api/media/";
-const STORAGE_FOLDER = "uploads/";
+const API_MEDIA_URL = '/api/media/';
+const STORAGE_FOLDER = 'uploads/';
 
 const uploadableTypes = {
-    png: "image/png",
-    jpg: "image/jpeg",
-    gif: "image/gif",
-    webp: "image/webp",
+    png: 'image/png',
+    jpg: 'image/jpeg',
+    gif: 'image/gif',
+    webp: 'image/webp',
 };
 
 /**
@@ -27,7 +27,7 @@ const getExtensionFromAcceptedMimeType = mimetype => {
         type => uploadableTypes[type] === mimetype
     );
     //console.log("mime-type:", mimetype, extension);
-    return extension.length ? extension : "";
+    return extension.length ? extension : '';
 };
 
 const upHandler = multer({
@@ -46,16 +46,13 @@ const upHandler = multer({
         filename: (req, file, cb) => {
             const mimetype = file.mimetype;
             const extension =
-                "." +
+                '.' +
                 Object.getOwnPropertyNames(uploadableTypes).filter(
                     type => uploadableTypes[type] === mimetype
                 );
             let filename = file.originalname;
-            filename +=
-                filename.substr(-extension.length) === extension
-                    ? ""
-                    : extension;
-            console.log("will save to ", filename);
+            filename += filename.substr(-extension.length) === extension ? '' : extension;
+            console.log('will save to ', filename);
             cb(null, filename);
         },
     }),
@@ -63,8 +60,8 @@ const upHandler = multer({
 
 /** configure CORS */
 const originsWhitelist = [
-    "http://localhost:4200", //this is my front-end url for development
-    "http://no.clue.yet",
+    'http://localhost:4200', //this is my front-end url for development
+    'http://no.clue.yet',
 ];
 const corsOptions = {
     origin: (origin, callback) => {
@@ -76,31 +73,28 @@ const corsOptions = {
 
 const app = express();
 
-app.use(morgan("dev")); // <-- is this doing anything?
+app.use(morgan('dev')); // <-- is this doing anything?
 // body parser should go here
 app.use(cors(corsOptions));
-app.use(express.static("server/static"));
+app.use(express.static('server/static'));
 // TODO: add serve-static middleware to serve the static files ( https://github.com/expressjs/serve-static )
 
-app.post("/api/upload", upHandler.single("uploaded_file"), (req, res) => {
+app.post('/api/upload', upHandler.single('uploaded_file'), (req, res) => {
     //res.status(201).send({ path: "some-path-will-be-here.jpg" });
     if (!req.file || !getExtensionFromAcceptedMimeType(req.file.mimetype)) {
         return res.status(422).json({
-            error: "The uploaded file must be an image",
+            error: 'The uploaded file must be an image',
         });
     } else {
         res.status(201).json({});
     }
 });
 
-app.get(API_MEDIA_URL + "*", (req, res) => {
-    console.log("getting media path!");
-    console.log("path:", req.url);
+app.get(API_MEDIA_URL + '*', (req, res) => {
+    console.log('getting media path!');
+    console.log('path:', req.url);
     let maskedPath = req.url.substr(API_MEDIA_URL.length);
-    maskedPath =
-        !maskedPath || maskedPath.substr(-1) === "/"
-            ? maskedPath
-            : maskedPath + "/";
+    maskedPath = !maskedPath || maskedPath.substr(-1) === '/' ? maskedPath : maskedPath + '/';
 
     if (!stats.isDirectorySync(STORAGE_FOLDER + maskedPath)) {
         res.status(404).send();
@@ -108,7 +102,7 @@ app.get(API_MEDIA_URL + "*", (req, res) => {
     }
     // match one or more of these patterns
     glob(
-        maskedPath + "*",
+        maskedPath + '*',
         {
             cwd: STORAGE_FOLDER,
         },
@@ -130,4 +124,5 @@ app.get(API_MEDIA_URL + "*", (req, res) => {
 });
 
 app.listen(3000);
-console.log("Listening on port 3000");
+module.exports = app;
+console.log('Listening on port 3000');
