@@ -8,7 +8,7 @@
     "main": "server/app.js",
     "scripts": {
         "start": "nodemon server/app.js -w server/",
-        "test": "echo 'Running Unit tests' && mocha server/**/*.test.js && echo 'Running integration tests' && mocha server/spec.js",
+        "test": "echo 'Running Unit tests' && mocha server/**/*.test.js && echo 'Running integration tests' && mocha tests/spec.js",
         "test-watch": "mocha server/**/*.test.js --watch"
     },
     "keywords": [
@@ -29,6 +29,7 @@
     },
     "devDependencies": {
         "chai": "^4.1.2",
+        "fs-extra": "^7.0.0",
         "mocha": "^5.2.0",
         "nodemon": "^1.17.5",
         "supertest": "^3.1.0"
