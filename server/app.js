@@ -8,7 +8,7 @@ const fs = require('fs');
 const stats = require('./stat');
 
 // These should be coming from some config ir ENV var.
-const API_MEDIA_URL = '/api/media/';
+const API_MEDIA_URL = '/api/media';
 const STORAGE_FOLDER = 'uploads/';
 
 const uploadableTypes = {
@@ -93,7 +93,12 @@ app.post('/api/upload', upHandler.single('uploaded_file'), (req, res) => {
 app.get(API_MEDIA_URL + '*', (req, res) => {
     console.log('getting media path!');
     console.log('path:', req.url);
-    let maskedPath = req.url.substr(API_MEDIA_URL.length);
+
+    // this is the path without API_MEDIA_URL sufix
+    let maskedPath = req.url.substr(API_MEDIA_URL.length + 1);
+    // this normalizes the trailing slash on root.
+    maskedPath = maskedPath === '/' ? '' : maskedPath;
+    // add trailing slash if missing
     maskedPath = !maskedPath || maskedPath.substr(-1) === '/' ? maskedPath : maskedPath + '/';
 
     if (!stats.isDirectorySync(STORAGE_FOLDER + maskedPath)) {

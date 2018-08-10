@@ -85,6 +85,30 @@ describe('GET api/media', () => {
                 done();
             });
     });
+    it('should return the contents of sub folders, even if the trailing slash is missing.', done => {
+        request(app)
+            .get('/api/media/mocks')
+            .set('Accept', 'application/json')
+            .expect('Content-type', 'application/json; charset=utf-8')
+            .expect(200)
+            .end((err, res) => {
+                if (err) return done(err);
+                expect(res.body).to.be.an('array').to.be.not.empty;
+                done();
+            });
+    });
+    it('should return the contents of the root folder, even if the trailing slash is missing.', done => {
+        request(app)
+            .get('/api/media')
+            .set('Accept', 'application/json')
+            .expect('Content-type', 'application/json; charset=utf-8')
+            .expect(200)
+            .end((err, res) => {
+                if (err) return done(err);
+                expect(res.body).to.be.an('array').to.be.not.empty;
+                done();
+            });
+    });
 });
 
 after(() => {
