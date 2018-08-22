@@ -6,34 +6,16 @@ const glob = require('glob');
 const fs = require('fs');
 
 const stats = require('./stat');
+const mimetypes = require('./mimetypes');
 
 // These should be coming from some config ir ENV var.
 const API_MEDIA_URL = '/api/media';
 const STORAGE_FOLDER = 'uploads/';
 
-const uploadableTypes = {
-    png: 'image/png',
-    jpg: 'image/jpeg',
-    gif: 'image/gif',
-    webp: 'image/webp',
-};
-
-/**
- * This returns an extension for a given filetype, if it's on the list of accepted types
- * @param {string} mimetype
- */
-const getExtensionFromAcceptedMimeType = mimetype => {
-    const extension = Object.getOwnPropertyNames(uploadableTypes).filter(
-        type => uploadableTypes[type] === mimetype
-    );
-    //console.log("mime-type:", mimetype, extension);
-    return extension.length ? extension : '';
-};
-
 const upHandler = multer({
     fileFilter: (req, file, cb) => {
         // @todo: make sure the mimetype is actualy the one advertized by the extension. @see issue #1
-        const extension = getExtensionFromAcceptedMimeType(file.mimetype);
+        const extension = mimetypes.getExtensionFromAcceptedMimeType(file.mimetype);
 
         cb(null, !!extension);
         // but nothing will stop, multer just won't save the file, express will happyly continue it's flow,
@@ -47,8 +29,8 @@ const upHandler = multer({
             const mimetype = file.mimetype;
             const extension =
                 '.' +
-                Object.getOwnPropertyNames(uploadableTypes).filter(
-                    type => uploadableTypes[type] === mimetype
+                Object.getOwnPropertyNames(mimetypes.uploadableTypes).filter(
+                    type => mimetypes.uploadableTypes[type] === mimetype
                 );
             let filename = file.originalname;
             filename += filename.substr(-extension.length) === extension ? '' : extension;
@@ -81,7 +63,7 @@ app.use(express.static('server/static'));
 
 app.post('/api/upload', upHandler.single('uploaded_file'), (req, res) => {
     //res.status(201).send({ path: "some-path-will-be-here.jpg" });
-    if (!req.file || !getExtensionFromAcceptedMimeType(req.file.mimetype)) {
+    if (!req.file || !mimetypes.getExtensionFromAcceptedMimeType(req.file.mimetype)) {
         return res.status(422).json({
             error: 'The uploaded file must be an image',
         });
@@ -91,24 +73,43 @@ app.post('/api/upload', upHandler.single('uploaded_file'), (req, res) => {
 });
 
 app.get(API_MEDIA_URL + '*', (req, res) => {
-    console.log('getting media path!');
-    console.log('path:', req.url);
+    console.log('1. ---- getting media path! ... ', req.url);
 
     // this is the path without API_MEDIA_URL sufix
     let maskedPath = req.url.substr(API_MEDIA_URL.length + 1);
     // this normalizes the trailing slash on root.
     maskedPath = maskedPath === '/' ? '' : maskedPath;
+
+    // path of the resource in the file system
+    const fsPath = STORAGE_FOLDER + maskedPath;
+
+    // if no file and no dir exist, return 404
+    if (!fs.existsSync(fsPath)) {
+        res.status(404).json();
+        return;
+    }
+
+    // if it is not a dir, get the file data
+    if (!stats.isDirectorySync(fsPath)) {
+        if (mimetypes.isListableFileType(fsPath)) {
+            res.status(200).json({
+                stats: fs.statSync(fsPath)
+            });
+        } else {
+            res.status(404).json();
+        }
+        return;
+    }
+
+    // if it is a dir
     // add trailing slash if missing
     maskedPath = !maskedPath || maskedPath.substr(-1) === '/' ? maskedPath : maskedPath + '/';
 
-    if (!stats.isDirectorySync(STORAGE_FOLDER + maskedPath)) {
-        res.status(404).send();
-        return;
-    }
     // match one or more of these patterns
+    const visibleExtensionsGlob = '*.' + Object.getOwnPropertyNames(mimetypes.uploadableTypes).join('|*.');
+    const globPath = maskedPath + '*'; // `${(maskedPath ? maskedPath : '')}@(${visibleExtensionsGlob})`;
     glob(
-        maskedPath + '*',
-        {
+        globPath, {
             cwd: STORAGE_FOLDER,
         },
         (err, files) => {
@@ -128,6 +129,8 @@ app.get(API_MEDIA_URL + '*', (req, res) => {
     );
 });
 
-app.listen(3000);
+if (!module.parent) {
+    app.listen(3000);
+}
 module.exports = app;
 console.log('Listening on port 3000');

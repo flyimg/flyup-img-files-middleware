@@ -91,17 +91,23 @@ async function isDirectory_asyncAwait(path) {
  * Mime related methods
  */
 
+/**
+ * Get mime and extension for the filetype of a path.
+ *
+ * @param {string} path
+ * @returns {mimetype: string, extension: string}
+ */
 function getMimeTypeAndExtension(path) {
     let type = mime.getType(path);
     if (type === null) {
         // if not recognized and not a directory, we treat it as txt/plain
         // @todo: try to recognize with the file buffer.
-        type = isDirectory_sync(path) ? 'DIRECTORY' : type;
+        type = isDirectory_sync(path) ? 'DIRECTORY' : 'text/plain';
     }
     let extension = mime.getExtension(type);
     extension = extension === 'jpeg' ? 'jpg' : extension;
     return {
-        type,
+        mimetype: type,
         extension,
     };
 }
