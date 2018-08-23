@@ -1,4 +1,5 @@
 const fs = require('fs');
+const path = require('path')
 const fsPromises = require('fs').promises;
 const mime = require('mime');
 
@@ -113,10 +114,25 @@ function getMimeTypeAndExtension(path) {
 }
 
 /**
- * For now we export only the async await implementation
+ * Returns an object with a bit more info than what stat does, including filename, size, extension and mimetype
+ * @param {string} filePath
+ */
+function fileInfo(filePath) {
+    const fileStat = fs.statSync(filePath);
+    return {
+        mtime: fileStat.mtime,
+        name: path.basename(filePath),
+        size: fileStat.size,
+        ...getMimeTypeAndExtension(filePath),
+    };
+}
+
+/**
+ * For now we export only the sync and async await implementation
  */
 module.exports = {
     isDirectory: isDirectory_asyncAwait,
     isDirectorySync: isDirectory_sync,
     getMimeTypeAndExtension,
+    fileInfo,
 };

@@ -27,8 +27,13 @@ const isListableFileType = path => {
     return !!result;
 }
 
+const isListableMimeType = mimetype => {
+    return Object.getOwnPropertyNames(uploadableTypes).some(extension => uploadableTypes[extension] === mimetype);
+}
+
 module.exports = {
     getExtensionFromAcceptedMimeType,
     isListableFileType,
+    isListableMimeType,
     uploadableTypes,
 }

@@ -50,11 +50,11 @@ describe('GET api/media', () => {
                 if (err) return done(err);
                 expect(res.body)
                     .to.be.an('array')
-                    .to.have.lengthOf(7); // update this when files or folders are added to the mosks folder
+                    .to.have.lengthOf(8); // update this when files or folders are added to the mosks folder
                 expect(
                     // here we check for the list to have images
                     res.body.filter(item => item.mimetype.substr(0, 6) === 'image/')
-                ).to.have.lengthOf(5);
+                ).to.have.lengthOf(6);
                 done();
             });
     });
@@ -150,7 +150,6 @@ describe('GET api/media', () => {
             .end((err, res) => {
                 if (err) return done(err);
                 expect(res.body).to.be.an('object').to.be.not.empty;
-                console.log('res.body', res.body);
                 done();
             });
     });

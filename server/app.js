@@ -92,9 +92,8 @@ app.get(API_MEDIA_URL + '*', (req, res) => {
     // if it is not a dir, get the file data
     if (!stats.isDirectorySync(fsPath)) {
         if (mimetypes.isListableFileType(fsPath)) {
-            res.status(200).json({
-                stats: fs.statSync(fsPath)
-            });
+            const relativeStoragePath = fsPath;
+            res.status(200).json(stats.fileInfo(relativeStoragePath));
         } else {
             res.status(404).json();
         }
@@ -105,24 +104,19 @@ app.get(API_MEDIA_URL + '*', (req, res) => {
     // add trailing slash if missing
     maskedPath = !maskedPath || maskedPath.substr(-1) === '/' ? maskedPath : maskedPath + '/';
 
-    // match one or more of these patterns
-    const visibleExtensionsGlob = '*.' + Object.getOwnPropertyNames(mimetypes.uploadableTypes).join('|*.');
-    const globPath = maskedPath + '*'; // `${(maskedPath ? maskedPath : '')}@(${visibleExtensionsGlob})`;
     glob(
-        globPath, {
+        maskedPath + '*', {
             cwd: STORAGE_FOLDER,
         },
         (err, files) => {
             res.status(200).json(
-                files.map(file => {
+                files
+                .map(file => {
                     const relativeStoragePath = STORAGE_FOLDER + file;
-                    const fileStat = fs.statSync(relativeStoragePath);
-                    return {
-                        mtime: fileStat.mtime,
-                        name: file,
-                        size: fileStat.size,
-                        ...stats.getMimeTypeAndExtension(relativeStoragePath),
-                    };
+                    return stats.fileInfo(relativeStoragePath);
+                })
+                .filter((file) => {
+                    return mimetypes.isListableMimeType(file.mimetype);
                 })
             );
         }
