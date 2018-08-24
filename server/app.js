@@ -1,5 +1,6 @@
 const express = require('express');
 const multer = require('multer');
+const bodyParser = require('body-parser');
 const cors = require('cors');
 const morgan = require('morgan');
 const glob = require('glob');
@@ -56,7 +57,7 @@ const corsOptions = {
 const app = express();
 
 app.use(morgan('dev')); // <-- is this doing anything?
-// body parser should go here
+app.use(bodyParser.json());
 app.use(cors(corsOptions));
 app.use(express.static('server/static'));
 // TODO: add serve-static middleware to serve the static files ( https://github.com/expressjs/serve-static )
@@ -73,7 +74,6 @@ app.post('/api/upload', upHandler.single('uploaded_file'), (req, res) => {
 });
 
 app.get(API_MEDIA_URL + '*', (req, res) => {
-    console.log('1. ---- getting media path! ... ', req.url);
 
     // this is the path without API_MEDIA_URL sufix
     let maskedPath = req.url.substr(API_MEDIA_URL.length + 1);
@@ -121,6 +121,71 @@ app.get(API_MEDIA_URL + '*', (req, res) => {
             );
         }
     );
+});
+
+app.post(API_MEDIA_URL + '*', (req, res) => {
+    console.log('2. ---- posting to media path: ', req.url);
+
+    // this is the path without API_MEDIA_URL sufix
+    let maskedPath = req.url.substr(API_MEDIA_URL.length + 1);
+    // this normalizes the trailing slash on root.
+    maskedPath = maskedPath === '/' ? '' : maskedPath;
+
+    // path of the resource in the file system
+    const fsPath = STORAGE_FOLDER + maskedPath;
+
+    // if no file and no dir exist, return 404
+    if (!fs.existsSync(fsPath)) {
+        res.status(404).json();
+        return;
+    }
+
+    // if it is not a dir, respond with not allowed??? oder?
+    /*
+    if (!stats.isDirectorySync(fsPath)) {
+        if (mimetypes.isListableFileType(fsPath)) {
+            const relativeStoragePath = fsPath;
+            res.status(200).json(stats.fileInfo(relativeStoragePath));
+        } else {
+            res.status(404).json();
+        }
+        return;
+    }
+    */
+
+    // if it is a dir
+    // add trailing slash if missing
+    maskedPath = !maskedPath || maskedPath.substr(-1) === '/' ? maskedPath : maskedPath + '/';
+
+    // if there is no name property: fail
+    if (!req.body.name) {
+        res.status(400).json({
+            error: 400,
+            message: 'ERROR: missing "name" attribute in the post data.'
+        })
+        return;
+    }
+
+    const newFolderPath = require('url').parse(req.body.name).pathname;
+
+    // we only allow the creation of one folder, not nested ones.
+    if (newFolderPath.indexOf('/') > -1) {
+        res.status(400).json({
+            error: 400,
+            message: `ERROR: invalid foldername:
+            ${newFolderPath}`,
+        });
+        return;
+    }
+
+    // if all goes well we create the folder
+    // TODO: change for async solution, and catch any errors.
+    fs.mkdirSync(STORAGE_FOLDER + newFolderPath);
+
+    res.status(201).json({
+        name: newFolderPath,
+    })
+    return;
 });
 
 if (!module.parent) {
