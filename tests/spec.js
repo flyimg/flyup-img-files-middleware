@@ -217,7 +217,19 @@ describe('POST /api/media', () => {
     });
 
     it('should respond with 404, with empty body, when the requested path is not found', done => {
-
+        request(app)
+            .post('/api/media/france')
+            .send({
+                name: 'marseille'
+            })
+            .set('Accept', 'application/json')
+            .expect('Content-type', 'application/json; charset=utf-8')
+            .expect(404)
+            .end((err, res) => {
+                if (err) return done(err);
+                expect(res.body).to.be.equal('');
+                done();
+            });
     });
 });
 
