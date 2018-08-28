@@ -166,24 +166,35 @@ app.post(API_MEDIA_URL + '*', (req, res) => {
         return;
     }
 
-    const newFolderPath = require('url').parse(req.body.name).pathname;
+    const newFolderName = require('url').parse(req.body.name).pathname;
 
     // we only allow the creation of one folder, not nested ones.
-    if (newFolderPath.indexOf('/') > -1) {
+    if (newFolderName.indexOf('/') > -1) {
         res.status(400).json({
             error: 400,
             message: `ERROR: invalid foldername:
-            ${newFolderPath}`,
+            ${newFolderName}`,
+        });
+        return;
+    }
+
+    const newFolderPath = STORAGE_FOLDER + maskedPath + newFolderName;
+
+    // existing folders can't be created again
+    if (stats.isDirectorySync(newFolderPath)) {
+        res.status(409).json({
+            error: 409,
+            message: `ERROR: The "${newFolderName}" folder already exists`,
         });
         return;
     }
 
     // if all goes well we create the folder
     // TODO: change for async solution, and catch any errors.
-    fs.mkdirSync(STORAGE_FOLDER + newFolderPath);
+    fs.mkdirSync(newFolderPath);
 
     res.status(201).json({
-        name: newFolderPath,
+        name: newFolderName,
     })
     return;
 });
