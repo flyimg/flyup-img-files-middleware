@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const express = require('express');
 const multer = require('multer');
 const bodyParser = require('body-parser');
@@ -9,9 +11,8 @@ const fs = require('fs');
 const stats = require('./stat');
 const mimetypes = require('./mimetypes');
 
-// These should be coming from some config ir ENV var.
-const API_MEDIA_URL = '/api/media';
-const STORAGE_FOLDER = 'uploads/';
+const API_MEDIA_URL = process.env.API_MEDIA_URL;
+const STORAGE_FOLDER = process.env.STORAGE_FOLDER;
 
 const upHandler = multer({
     fileFilter: (req, file, cb) => {
@@ -73,22 +74,28 @@ app.post('/api/upload', upHandler.single('uploaded_file'), (req, res) => {
     }
 });
 
-app.get(API_MEDIA_URL + '*', (req, res) => {
-
+app.all(API_MEDIA_URL + '*', (req, res) => {
     // this is the path without API_MEDIA_URL sufix
     let maskedPath = req.url.substr(API_MEDIA_URL.length + 1);
     // this normalizes the trailing slash on root.
     maskedPath = maskedPath === '/' ? '' : maskedPath;
 
     // path of the resource in the file system
-    const fsPath = STORAGE_FOLDER + maskedPath;
+    req.fsPath = STORAGE_FOLDER + maskedPath;
+    req.maskedPath = maskedPath;
 
     // if no file and no dir exist, return 404
-    if (!fs.existsSync(fsPath)) {
+    if (!fs.existsSync(req.fsPath)) {
         res.status(404).json();
         return;
     }
 
+    req.next();
+});
+
+app.get(API_MEDIA_URL + '*', (req, res) => {
+
+    const fsPath = req.fsPath;
     // if it is not a dir, get the file data
     if (!stats.isDirectorySync(fsPath)) {
         if (mimetypes.isListableFileType(fsPath)) {
@@ -101,6 +108,7 @@ app.get(API_MEDIA_URL + '*', (req, res) => {
     }
 
     // if it is a dir
+    let maskedPath = req.maskedPath;
     // add trailing slash if missing
     maskedPath = !maskedPath || maskedPath.substr(-1) === '/' ? maskedPath : maskedPath + '/';
 
@@ -126,34 +134,8 @@ app.get(API_MEDIA_URL + '*', (req, res) => {
 app.post(API_MEDIA_URL + '*', (req, res) => {
     console.log('2. ---- posting to media path: ', req.url);
 
-    // this is the path without API_MEDIA_URL sufix
-    let maskedPath = req.url.substr(API_MEDIA_URL.length + 1);
-    // this normalizes the trailing slash on root.
-    maskedPath = maskedPath === '/' ? '' : maskedPath;
-
-    // path of the resource in the file system
-    const fsPath = STORAGE_FOLDER + maskedPath;
-
-    // if no file and no dir exist, return 404
-    if (!fs.existsSync(fsPath)) {
-        res.status(404).json();
-        return;
-    }
-
-    // if it is not a dir, respond with not allowed??? oder?
-    /*
-    if (!stats.isDirectorySync(fsPath)) {
-        if (mimetypes.isListableFileType(fsPath)) {
-            const relativeStoragePath = fsPath;
-            res.status(200).json(stats.fileInfo(relativeStoragePath));
-        } else {
-            res.status(404).json();
-        }
-        return;
-    }
-    */
-
     // if it is a dir
+    let maskedPath = req.maskedPath;
     // add trailing slash if missing
     maskedPath = !maskedPath || maskedPath.substr(-1) === '/' ? maskedPath : maskedPath + '/';
 
@@ -197,6 +179,24 @@ app.post(API_MEDIA_URL + '*', (req, res) => {
         name: newFolderName,
     })
     return;
+});
+
+app.delete(API_MEDIA_URL + '*', (req, res) => {
+    console.log('3. ---- delete media path: ', req.url);
+
+    let maskedPath = req.maskedPath;
+
+    // if the path is the media root, it should not be allowed to delete
+    if (!maskedPath) {
+        res.status(405).json({
+            error: 405,
+            message: 'Method (DELETE) not alowed for this route.'
+        })
+    }
+
+    // if it is a dir
+    // add trailing slash if missing
+    maskedPath = !maskedPath || maskedPath.substr(-1) === '/' ? maskedPath : maskedPath + '/';
 });
 
 if (!module.parent) {
