@@ -7,6 +7,7 @@ const cors = require('cors');
 const morgan = require('morgan');
 const glob = require('glob');
 const fs = require('fs');
+const fse = require('fs-extra');
 
 const stats = require('./stat');
 const mimetypes = require('./mimetypes');
@@ -99,8 +100,7 @@ app.get(API_MEDIA_URL + '*', (req, res) => {
     // if it is not a dir, get the file data
     if (!stats.isDirectorySync(fsPath)) {
         if (mimetypes.isListableFileType(fsPath)) {
-            const relativeStoragePath = fsPath;
-            res.status(200).json(stats.fileInfo(relativeStoragePath));
+            res.status(200).json(stats.fileInfo(fsPath));
         } else {
             res.status(404).json();
         }
@@ -192,11 +192,27 @@ app.delete(API_MEDIA_URL + '*', (req, res) => {
             error: 405,
             message: 'Method (DELETE) not alowed for this route.'
         })
+        return;
     }
 
-    // if it is a dir
-    // add trailing slash if missing
-    maskedPath = !maskedPath || maskedPath.substr(-1) === '/' ? maskedPath : maskedPath + '/';
+    const fsPath = req.fsPath;
+    // if it is not a dir, check the filetype is listable (and deletable)
+    if (!stats.isDirectorySync(fsPath)) { // this is a file
+        if (mimetypes.isListableFileType(fsPath)) {
+            fse.removeSync(fsPath);
+            res.status(200).json({
+                name: maskedPath
+            });
+        } else {
+            // then this is not a file suposed to be seen
+            res.status(404).json();
+        }
+    } else { // this is a folder
+        fse.removeSync(fsPath);
+        res.status(200).json({
+            name: maskedPath
+        });
+    }
 });
 
 if (!module.parent) {

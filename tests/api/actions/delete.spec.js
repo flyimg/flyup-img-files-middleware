@@ -9,7 +9,12 @@ const STORAGE_FOLDER = process.env.STORAGE_FOLDER;
 
 describe('DELETE api/media', () => {
     before(() => {
-        fse.removeSync(`${STORAGE_FOLDER}/mocks/.gitkeep`);
+        try {
+            fse.removeSync(`${STORAGE_FOLDER}mocks/.gitkeep`);
+        } catch (err) {
+            console.error('Mock folder not found! something is wrong');
+            throw err;
+        }
     });
     it('should not allow deleteing the main folder', done => {
         request(app)
@@ -63,7 +68,7 @@ describe('DELETE api/media', () => {
                 if (err) return done(err);
                 expect(res.body).to.be.an('object')
                     .to.haveOwnProperty('name')
-                    .to.be.equal('sakuras_small.jpg');
+                    .to.be.equal('mocks/sakuras_small.jpg');
                 done();
             });
     });
@@ -78,7 +83,7 @@ describe('DELETE api/media', () => {
                 if (err) return done(err);
                 expect(res.body).to.be.an('object')
                     .to.haveOwnProperty('name')
-                    .to.be.equal('empty');
+                    .to.be.equal('mocks/empty');
                 done();
             });
     });
@@ -93,7 +98,7 @@ describe('DELETE api/media', () => {
                 if (err) return done(err);
                 expect(res.body).to.be.an('object')
                     .to.haveOwnProperty('name')
-                    .to.be.equal('venice');
+                    .to.be.equal('mocks/venice');
                 done();
             });
     });
