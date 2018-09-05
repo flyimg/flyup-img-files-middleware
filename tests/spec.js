@@ -12,12 +12,13 @@ const MOCKS_DIR = process.env.MOCKS_DIR;
 
 require('./api/actions/get.spec')
 require('./api/actions/post.spec')
+require('./api/actions/upload.post.spec')
 require('./api/actions/delete.spec')
 
 before(() => {
     console.log('Setup testing environment.');
     if (!stat.isDirectorySync(STORAGE_FOLDER)) {
-        console.log('Creating uploads dir:' + STORAGE_FOLDER);
+        console.log('Creating uploads dir: ' + STORAGE_FOLDER);
         fs.mkdirSync(STORAGE_FOLDER);
     }
 

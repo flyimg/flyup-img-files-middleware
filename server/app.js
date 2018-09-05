@@ -15,29 +15,38 @@ const mimetypes = require('./mimetypes');
 const API_MEDIA_URL = process.env.API_MEDIA_URL;
 const STORAGE_FOLDER = process.env.STORAGE_FOLDER;
 
+const contentTypes = {
+    appJson: "application/json",
+    multipart: "multipart/form-data;",
+};
+
 const upHandler = multer({
     fileFilter: (req, file, cb) => {
         // @todo: make sure the mimetype is actualy the one advertized by the extension. @see issue #1
         const extension = mimetypes.getExtensionFromAcceptedMimeType(file.mimetype);
 
-        cb(null, !!extension);
-        // but nothing will stop, multer just won't save the file, express will happyly continue it's flow,
-        // so we need to make the check again to send the proper response
+        // we store the extension property in the file object
+        file.extension = extension;
+
+        // for now we just validate if it is one of the expected filetypes.
+        const isValidFile = !!extension;
+
+        cb(null, isValidFile);
+        // If it's not a valid file, nothing will stop, multer just won't save the file, express will happyly continue it's flow,
     },
     storage: multer.diskStorage({
         destination: (req, file, cb) => {
-            cb(null, STORAGE_FOLDER);
+            // gets the calculated final path from the req object (it was calculated earlier)
+            cb(null, req.fsPath);
         },
         filename: (req, file, cb) => {
-            const mimetype = file.mimetype;
-            const extension =
-                '.' +
-                Object.getOwnPropertyNames(mimetypes.uploadableTypes).filter(
-                    type => mimetypes.uploadableTypes[type] === mimetype
-                );
+            const extension = file.extension;
             let filename = file.originalname;
-            filename += filename.substr(-extension.length) === extension ? '' : extension;
-            console.log('will save to ', filename);
+
+            // we chek if the mimetype extension is already part of the filename, if not we append the extension.
+            filename += filename.substr(-extension.length) === extension ? '' : '.' + extension;
+
+            // we call the callback with the final filename
             cb(null, filename);
         },
     }),
@@ -58,26 +67,16 @@ const corsOptions = {
 
 const app = express();
 
-app.use(morgan('dev')); // <-- is this doing anything?
+app.use(morgan(process.env.MORGAN_LOG_TYPE || 'combined'));
 app.use(bodyParser.json());
 app.use(cors(corsOptions));
 app.use(express.static('server/static'));
 // TODO: add serve-static middleware to serve the static files ( https://github.com/expressjs/serve-static )
 
-app.post('/api/upload', upHandler.single('uploaded_file'), (req, res) => {
-    //res.status(201).send({ path: "some-path-will-be-here.jpg" });
-    if (!req.file || !mimetypes.getExtensionFromAcceptedMimeType(req.file.mimetype)) {
-        return res.status(422).json({
-            error: 'The uploaded file must be an image',
-        });
-    } else {
-        res.status(201).json({});
-    }
-});
-
 app.all(API_MEDIA_URL + '*', (req, res) => {
     // this is the path without API_MEDIA_URL sufix
     let maskedPath = req.url.substr(API_MEDIA_URL.length + 1);
+
     // this normalizes the trailing slash on root.
     maskedPath = maskedPath === '/' ? '' : maskedPath;
 
@@ -87,11 +86,26 @@ app.all(API_MEDIA_URL + '*', (req, res) => {
 
     // if no file and no dir exist, return 404
     if (!fs.existsSync(req.fsPath)) {
-        res.status(404).json();
-        return;
+        return res.status(404).json();
     }
 
-    req.next();
+    return req.next();
+});
+
+app.post(API_MEDIA_URL + '*', upHandler.single('uploaded_file'), (req, res) => {
+    // If this is just regular json skip this and go on to the next middleware
+    if (req.headers["content-type"] === contentTypes.appJson) {
+        return req.next();
+    }
+
+    // if there is no file posted or it's not allowed, reject.
+    if (!req.file || !mimetypes.getExtensionFromAcceptedMimeType(req.file.mimetype)) {
+        return res.status(422).json({
+            error: 'The uploaded file must be an image',
+        });
+    } else {
+        return res.status(201).json({});
+    }
 });
 
 app.get(API_MEDIA_URL + '*', (req, res) => {
