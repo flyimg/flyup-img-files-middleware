@@ -36,8 +36,18 @@ const upHandler = multer({
     },
     storage: multer.diskStorage({
         destination: (req, file, cb) => {
+
+            let error = null;
+            // if it is not a dir, it's trying to post to a file... crazy
+            if (!stats.isDirectorySync(req.fsPath)) {
+                error = {
+                    error: 409,
+                    message: 'ERROR: You can not POST to a file, only a folder. Go home, you crazy.'
+                };
+                return req.next(error);
+            }
             // gets the calculated final path from the req object (it was calculated earlier)
-            cb(null, req.fsPath);
+            cb(error, req.fsPath);
         },
         filename: (req, file, cb) => {
             const extension = file.extension;
@@ -101,7 +111,8 @@ app.post(API_MEDIA_URL + '*', upHandler.single('uploaded_file'), (req, res) => {
     // if there is no file posted or it's not allowed, reject.
     if (!req.file || !mimetypes.getExtensionFromAcceptedMimeType(req.file.mimetype)) {
         return res.status(422).json({
-            error: 'The uploaded file must be an image',
+            error: 422,
+            message: 'ERROR: The uploaded file must be an image',
         });
     } else {
         return res.status(201).json({});
@@ -228,6 +239,13 @@ app.delete(API_MEDIA_URL + '*', (req, res) => {
         });
     }
 });
+
+// here we pass unhandled errors (like from multer)
+app.use((err, req, res, next) => {
+    if (err && err.error) {
+        res.status(err.error).json(err);
+    }
+})
 
 if (!module.parent) {
     app.listen(3000);
