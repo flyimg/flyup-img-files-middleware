@@ -7,7 +7,8 @@
     },
     "main": "server/app.js",
     "scripts": {
-        "start": "nodemon server/app.js -w server/",
+        "start": "node server/app.js -w server/",
+        "start:dev": "nodemon server/app.js -w server/",
         "test": "echo 'Running Unit tests' && mocha server/**/*.test.js && echo 'Running integration tests' && mocha tests/spec.js",
         "test-watch": "mocha server/**/*.test.js --watch"
     },

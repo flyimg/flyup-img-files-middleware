@@ -16,7 +16,7 @@ They are defined next to each module, with the same name, but with a `.test` suf
 
 ### Integration
 
-In this project integration tests define the API of the application, thay are stored in the `/tests` folder and are called specs.
+In this project integration tests define the API of the application, they are stored in the `/tests` folder and are called specs.
 
 ## Watching
 
