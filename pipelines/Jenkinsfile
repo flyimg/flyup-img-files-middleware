@@ -1,11 +1,12 @@
 // Scripted pipeline
 node {
     def commit_id
+    def ciContainer
     stage('Preparation') {
         checkout scm
         sh "git rev-parse --short HEAD > .git/commit-id"
         commit_id = readFile('.git/commit-id').trim()
-        def ciContainer = docker.build("flyup:${commit_id}")
+        ciContainer = docker.build("flyup:${commit_id}")
     }
     stage('Lint') {
         sh 'echo ...Linting ... coming soon'
