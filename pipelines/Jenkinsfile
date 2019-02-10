@@ -13,7 +13,7 @@ node {
     }
     stage('Test') {
         ciContainer.inside {
-            sh 'npm test'
+            sh 'echo pwd && npm test'
         }
     }
 }
