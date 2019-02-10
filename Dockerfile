@@ -3,6 +3,6 @@ FROM node:10.13-alpine
 WORKDIR /usr/src/app
 COPY ["package.json", "package-lock.json*", "npm-shrinkwrap.json*", "./"]
 COPY . .
-RUN npm install -g mocha && npm install
+RUN npm install
 EXPOSE 3000
 CMD npm start
