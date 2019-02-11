@@ -8,11 +8,16 @@ node {
         commit_id = readFile('.git/commit-id').trim()
         ciContainer = docker.build("flyup:${commit_id}")
     }
+    stage('Install dependencies in image') {
+        ciContainer.inside{
+            sh 'npm i'
+        }
+    }
     stage('Lint') {
         sh 'echo ...Linting ... coming soon'
     }
     stage('Test') {
-        ciContainer.inside {
+        ciContainer.inside ('--env-file .env.test') {
             sh 'pwd && ls -la && npm test'
         }
     }
