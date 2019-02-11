@@ -14,11 +14,11 @@ node {
         }
     }
     stage('Lint') {
-        sh 'echo ...Linting ... coming soon'
+        sh 'echo ...Linting ... coming soon && pwd && ls -la '
     }
     stage('Test') {
         ciContainer.inside ('--env-file .env.test') {
-            sh 'pwd && ls -la && npm test'
+            sh 'npm test'
         }
     }
 }
