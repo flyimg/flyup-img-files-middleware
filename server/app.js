@@ -8,6 +8,7 @@ const morgan = require('morgan');
 const glob = require('glob');
 const fs = require('fs');
 const fse = require('fs-extra');
+const urlParse = require('url').parse;
 
 const stats = require('./stat');
 const mimetypes = require('./mimetypes');
@@ -16,8 +17,8 @@ const API_MEDIA_URL = process.env.API_MEDIA_URL;
 const STORAGE_FOLDER = process.env.STORAGE_FOLDER;
 
 const contentTypes = {
-    appJson: "application/json",
-    multipart: "multipart/form-data;",
+    appJson: 'application/json',
+    multipart: 'multipart/form-data;',
 };
 
 const upHandler = multer({
@@ -26,23 +27,25 @@ const upHandler = multer({
         const extension = mimetypes.getExtensionFromAcceptedMimeType(file.mimetype);
 
         // we store the extension property in the file object
+        // eslint-disable-next-line no-param-reassign
         file.extension = extension;
 
         // for now we just validate if it is one of the expected filetypes.
         const isValidFile = !!extension;
 
         cb(null, isValidFile);
+
         // If it's not a valid file, nothing will stop, multer just won't save the file, express will happyly continue it's flow,
     },
     storage: multer.diskStorage({
         destination: (req, file, cb) => {
-
             let error = null;
             // if it is not a dir, it's trying to post to a file... crazy
             if (!stats.isDirectorySync(req.fsPath)) {
                 error = {
                     error: 409,
-                    message: 'ERROR: You can not POST to a file, only a folder. Go home, you crazy.'
+                    message: `ERROR: You can not POST to a file, only a folder.
+                    Go home, you crazy.`,
                 };
                 return req.next(error);
             }
@@ -64,7 +67,7 @@ const upHandler = multer({
 
 /** configure CORS */
 const originsWhitelist = [
-    'http://localhost:4200', //this is my front-end url for development
+    'http://localhost:4200', // this is my front-end url for development
     'http://no.clue.yet',
 ];
 const corsOptions = {
@@ -104,7 +107,7 @@ app.all(API_MEDIA_URL + '*', (req, res) => {
 
 app.post(API_MEDIA_URL + '*', upHandler.single('uploaded_file'), (req, res) => {
     // If this is just regular json skip this and go on to the next middleware
-    if (req.headers["content-type"] === contentTypes.appJson) {
+    if (req.headers['content-type'] === contentTypes.appJson) {
         return req.next();
     }
 
@@ -114,13 +117,11 @@ app.post(API_MEDIA_URL + '*', upHandler.single('uploaded_file'), (req, res) => {
             error: 422,
             message: 'ERROR: The uploaded file must be an image',
         });
-    } else {
-        return res.status(201).json({});
     }
+    return res.status(201).json({});
 });
 
 app.get(API_MEDIA_URL + '*', (req, res) => {
-
     const fsPath = req.fsPath;
     // if it is not a dir, get the file data
     if (!stats.isDirectorySync(fsPath)) {
@@ -138,27 +139,24 @@ app.get(API_MEDIA_URL + '*', (req, res) => {
     maskedPath = !maskedPath || maskedPath.substr(-1) === '/' ? maskedPath : maskedPath + '/';
 
     glob(
-        maskedPath + '*', {
+        maskedPath + '*',
+        {
             cwd: STORAGE_FOLDER,
         },
         (err, files) => {
             res.status(200).json(
                 files
-                .map(file => {
-                    const relativeStoragePath = STORAGE_FOLDER + file;
-                    return stats.fileInfo(relativeStoragePath);
-                })
-                .filter((file) => {
-                    return mimetypes.isListableMimeType(file.mimetype);
-                })
+                    .map((file) => {
+                        const relativeStoragePath = STORAGE_FOLDER + file;
+                        return stats.fileInfo(relativeStoragePath);
+                    })
+                    .filter(file => mimetypes.isListableMimeType(file.mimetype))
             );
         }
     );
 });
 
 app.post(API_MEDIA_URL + '*', (req, res) => {
-    console.log('2. ---- posting to media path: ', req.url);
-
     // if it is a dir
     let maskedPath = req.maskedPath;
     // add trailing slash if missing
@@ -168,12 +166,12 @@ app.post(API_MEDIA_URL + '*', (req, res) => {
     if (!req.body.name) {
         res.status(400).json({
             error: 400,
-            message: 'ERROR: missing "name" attribute in the post data.'
-        })
+            message: 'ERROR: missing "name" attribute in the post data.',
+        });
         return;
     }
 
-    const newFolderName = require('url').parse(req.body.name).pathname;
+    const newFolderName = urlParse(req.body.name).pathname;
 
     // we only allow the creation of one folder, not nested ones.
     if (newFolderName.indexOf('/') > -1) {
@@ -202,53 +200,54 @@ app.post(API_MEDIA_URL + '*', (req, res) => {
 
     res.status(201).json({
         name: newFolderName,
-    })
-    return;
+    });
 });
 
 app.delete(API_MEDIA_URL + '*', (req, res) => {
-    console.log('3. ---- delete media path: ', req.url);
-
-    let maskedPath = req.maskedPath;
+    const maskedPath = req.maskedPath;
 
     // if the path is the media root, it should not be allowed to delete
     if (!maskedPath) {
         res.status(405).json({
             error: 405,
-            message: 'Method (DELETE) not alowed for this route.'
-        })
+            message: 'Method (DELETE) not alowed for this route.',
+        });
         return;
     }
 
     const fsPath = req.fsPath;
     // if it is not a dir, check the filetype is listable (and deletable)
-    if (!stats.isDirectorySync(fsPath)) { // this is a file
+    if (!stats.isDirectorySync(fsPath)) {
+        // this is a file
         if (mimetypes.isListableFileType(fsPath)) {
             fse.removeSync(fsPath);
             res.status(200).json({
-                name: maskedPath
+                name: maskedPath,
             });
         } else {
             // then this is not a file suposed to be seen
             res.status(404).json();
         }
-    } else { // this is a folder
+    } else {
+        // this is a folder
         fse.removeSync(fsPath);
         res.status(200).json({
-            name: maskedPath
+            name: maskedPath,
         });
     }
 });
 
 // here we pass unhandled errors (like from multer)
+// eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
     if (err && err.error) {
         res.status(err.error).json(err);
     }
-})
+});
 
 if (!module.parent) {
     app.listen(3000);
 }
 module.exports = app;
+// eslint-disable-next-line no-console
 console.log('Listening on port 3000');

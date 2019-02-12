@@ -10,7 +10,8 @@
         "start": "node server/app.js -w server/",
         "start:dev": "nodemon server/app.js -w server/",
         "test": "echo 'Running Unit tests' && mocha server/**/*.test.js && echo 'Running integration tests' && mocha tests/spec.js",
-        "test-watch": "mocha server/**/*.test.js --watch"
+        "test-watch": "mocha server/**/*.test.js --watch",
+        "lint": "eslint server/"
     },
     "keywords": [
         "img",
@@ -33,8 +34,16 @@
     },
     "devDependencies": {
         "chai": "^4.1.2",
+        "eslint": "^5.13.0",
+        "eslint-plugin-import": "^2.16.0",
+        "eslint-config-airbnb-base": "^13.1.0",
         "mocha": "^5.2.0",
         "nodemon": "^1.17.5",
         "supertest": "^3.1.0"
-    }
+    },
+    "eslintIgnore": [
+        "static/",
+        "dev-assets/",
+        "coverage/"
+    ]
 }

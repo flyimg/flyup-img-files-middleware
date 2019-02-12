@@ -1,5 +1,7 @@
+/* eslint-disable no-unused-vars */
+/* eslint-disable camelcase */
 const fs = require('fs');
-const path = require('path')
+const path = require('path');
 const fsPromises = require('fs').promises;
 const mime = require('mime');
 
@@ -16,19 +18,19 @@ function isErrorNotFound(err) {
 /**
  * The good old synchronous check to see if a path results in a folder.
  *
- * @param {string} path
+ * @param {string} filePath
  * @returns {boolean}
  */
-function isDirectory_sync(path) {
+function isDirectory_sync(filePath) {
     try {
-        const stat = fs.statSync(path);
+        const stat = fs.statSync(filePath);
         return stat.isDirectory();
     } catch (err) {
         // if it's simply a not found error
         if (isErrorNotFound(err)) {
             return false;
         }
-        //othewise throw the error
+        // othewise throw the error
         throw err;
     }
 }
@@ -36,11 +38,11 @@ function isDirectory_sync(path) {
 /**
  * Async + callback version of the check to see if a path resolves to a folder
  *
- * @param {string} path : does this resolve to a dir?
+ * @param {string} filePath : does this resolve to a dir?
  * @param {Function} callback : this callback gets called with the result (bool)
  */
-function isDirectory_callback(path, callback) {
-    fs.stat(path, (err, stat) => {
+function isDirectory_callback(filePath, callback) {
+    fs.stat(filePath, (err, stat) => {
         if (err) {
             const errorToReturn = isErrorNotFound(err) ? undefined : err;
             callback(errorToReturn, false);
@@ -53,15 +55,13 @@ function isDirectory_callback(path, callback) {
 /**
  * Promise based async check if a path resolves to a dir
  *
- * @param {string} path
+ * @param {string} filePath
  * @returns {Promise}
  */
-function isDirectory_promise(path) {
+function isDirectory_promise(filePath) {
     return fsPromises
-        .stat(path)
-        .then(fsStat => {
-            return fsStat.isDirectory();
-        })
+        .stat(filePath)
+        .then(fsStat => fsStat.isDirectory())
         .catch(err => {
             if (isErrorNotFound(err)) {
                 return false;
@@ -73,12 +73,12 @@ function isDirectory_promise(path) {
 /**
  * Async awaited version of the check if a path resolves to a dir
  *
- * @param {string} path
+ * @param {string} filePath
  * @returns {Promise}
  */
-async function isDirectory_asyncAwait(path) {
+async function isDirectory_asyncAwait(filePath) {
     // the result can be either false (from the caught error) or it can be an fs.stats object
-    const result = await fsPromises.stat(path).catch(err => {
+    const result = await fsPromises.stat(filePath).catch(err => {
         if (isErrorNotFound(err)) {
             return false;
         }
@@ -95,15 +95,15 @@ async function isDirectory_asyncAwait(path) {
 /**
  * Get mime and extension for the filetype of a path.
  *
- * @param {string} path
- * @returns {mimetype: string, extension: string}
+ * @param {string} filePath
+ * @returns {object} {mimetype: string, extension: string}
  */
-function getMimeTypeAndExtension(path) {
-    let type = mime.getType(path);
+function getMimeTypeAndExtension(filePath) {
+    let type = mime.getType(filePath);
     if (type === null) {
         // if not recognized and not a directory, we treat it as txt/plain
         // @todo: try to recognize with the file buffer.
-        type = isDirectory_sync(path) ? 'DIRECTORY' : 'text/plain';
+        type = isDirectory_sync(filePath) ? 'DIRECTORY' : 'text/plain';
     }
     let extension = mime.getExtension(type);
     extension = extension === 'jpeg' ? 'jpg' : extension;
