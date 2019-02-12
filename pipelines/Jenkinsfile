@@ -14,10 +14,10 @@ node {
         }
     }
     stage('Lint') {
-        sh 'echo ...Linting ... coming soon && pwd && ls -la '
+        sh 'echo ...Linting ... coming soon && pwd && echo ${WORKSPACE} && ls -la '
     }
     stage('Test') {
-        ciContainer.inside ("--env-file /var/jenkins_home/workspace/flyup_jenkins-setup/.env.test") {
+        ciContainer.inside ("--env-file ${WORKSPACE}/.env.test") {
             sh 'npm test'
         }
     }
