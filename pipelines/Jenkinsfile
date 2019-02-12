@@ -14,7 +14,9 @@ node {
         }
     }
     stage('Lint') {
-        sh 'echo ...Linting ... coming soon && pwd && echo ${WORKSPACE} && ls -la '
+        ciContainer.inside{
+            sh 'npm run lint'
+        }
     }
     stage('Test') {
         ciContainer.inside ("--env-file ${WORKSPACE}/.env.test") {
