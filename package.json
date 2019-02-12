@@ -40,5 +40,10 @@
         "mocha": "^5.2.0",
         "nodemon": "^1.17.5",
         "supertest": "^3.1.0"
-    }
+    },
+    "eslintIgnore": [
+        "static/",
+        "dev-assets/",
+        "coverage/"
+    ]
 }
