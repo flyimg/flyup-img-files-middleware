@@ -83,7 +83,6 @@ const app = express();
 app.use(morgan(process.env.MORGAN_LOG_TYPE || 'combined'));
 app.use(bodyParser.json());
 app.use(cors(corsOptions));
-app.use(express.static('server/static'));
 // TODO: add serve-static middleware to serve the static files ( https://github.com/expressjs/serve-static )
 
 app.all(API_MEDIA_URL + '*', (req, res) => {

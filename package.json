@@ -1,16 +1,16 @@
 {
     "name": "flyup",
     "version": "1.0.0",
-    "description": "Image upload server, front and back end.",
+    "description": "Image upload and image managing server express middleware. For simple purposes",
     "repository": {
         "url": "https://github.com/baamenabar/flyup"
     },
-    "main": "server/app.js",
+    "main": "server/img-files.js",
     "scripts": {
         "start": "node server/app.js -w server/",
         "start:dev": "nodemon server/app.js -w server/",
         "test": "echo 'Running Unit tests' && mocha server/**/*.test.js && echo 'Running integration tests' && mocha tests/spec.js",
-        "test-watch": "mocha server/**/*.test.js --watch",
+        "test:watch": "mocha server/**/*.test.js --watch",
         "lint": "eslint server/"
     },
     "keywords": [
@@ -25,7 +25,7 @@
         "body-parser": "^1.18.3",
         "cors": "^2.8.4",
         "dotenv": "^6.0.0",
-        "express": "^4.16.3",
+        "express": "^4.16.4",
         "fs-extra": "^7.0.0",
         "glob": "^7.1.2",
         "mime": "^2.3.1",
