@@ -1,7 +1,7 @@
 {
     "name": "flyup",
     "version": "1.0.0",
-    "description": "Image upload and image managing server express middleware. For simple purposes",
+    "description": "Image upload and image managing server express middleware.",
     "repository": {
         "url": "https://github.com/baamenabar/flyup"
     },
@@ -40,6 +40,10 @@
         "mocha": "^5.2.0",
         "nodemon": "^1.17.5",
         "supertest": "^3.1.0"
+    },
+    "engines": {
+        "node": ">=10.0.0",
+        "npm": ">=6.0.0"
     },
     "eslintIgnore": [
         "static/",

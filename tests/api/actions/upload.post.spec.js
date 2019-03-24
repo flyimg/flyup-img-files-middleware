@@ -1,10 +1,11 @@
-require('dotenv').config()
+require('dotenv').config();
 
 const request = require('supertest');
-const app = require('../../../server/app');
 const expect = require('chai').expect;
 
 const fse = require('fs-extra');
+const path = require('path');
+const app = require('../../../server/app');
 
 const STORAGE_FOLDER = process.env.STORAGE_FOLDER;
 // fixtures/Acaena-argenta__small.jpg
@@ -50,7 +51,7 @@ describe('UPLOADS to /api/media', () => {
                 });
         });
 
-        it(`should fail with a 409 and a message when trying to upload to a file`, done => {
+        it('should fail with a 409 and a message when trying to upload to a file', done => {
             const agent = request(app);
             agent
                 .post('/api/media/mocks/butterfly_small.png')
@@ -98,13 +99,18 @@ describe('UPLOADS to /api/media', () => {
         it('should happily overwrite an image if posted to the same path', done => {
             try {
                 // we copy a first image to where the we want to upload the second image, also renaming it to match the second one.
-                fse.copyFileSync('tests/fixtures/Acaena-argenta__small.jpg', `${STORAGE_FOLDER}mocks/venice/cactus-flower_h300.jpg`);
+                fse.copyFileSync(
+                    'tests/fixtures/Acaena-argenta__small.jpg',
+                    path.join(STORAGE_FOLDER, 'mocks/venice/cactus-flower_h300.jpg')
+                );
             } catch (err) {
                 console.error('Mock folder or target folder not found! something is wrong');
                 throw err;
             }
             // we store the size of the first image
-            const originalFileSize = fse.statSync(`${STORAGE_FOLDER}mocks/venice/cactus-flower_h300.jpg`).size;
+            const originalFileSize = fse.statSync(
+                path.join(STORAGE_FOLDER, 'mocks/venice/cactus-flower_h300.jpg')
+            ).size;
             const agent = request(app);
             agent
                 .post('/api/media/mocks/venice')
@@ -114,7 +120,9 @@ describe('UPLOADS to /api/media', () => {
                 .end((err, res) => {
                     if (err) return done(err);
                     expect(res.body).to.be.an('object');
-                    const finalFileSize = fse.statSync(`${STORAGE_FOLDER}mocks/cactus-flower_h300.jpg`).size;
+                    const finalFileSize = fse.statSync(
+                        path.join(STORAGE_FOLDER, 'mocks/cactus-flower_h300.jpg')
+                    ).size;
                     expect(originalFileSize).to.be.above(finalFileSize);
                     done();
                 });

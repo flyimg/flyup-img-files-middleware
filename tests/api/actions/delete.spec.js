@@ -1,16 +1,17 @@
-require('dotenv').config()
+require('dotenv').config();
 
 const request = require('supertest');
-const app = require('../../../server/app');
 const expect = require('chai').expect;
 const fse = require('fs-extra');
+const path = require('path');
+const app = require('../../../server/app');
 
 const STORAGE_FOLDER = process.env.STORAGE_FOLDER;
 
 describe('DELETE api/media', () => {
     before(() => {
         try {
-            fse.removeSync(`${STORAGE_FOLDER}mocks/.gitkeep`);
+            fse.removeSync(path.join(STORAGE_FOLDER, 'mocks/.gitkeep'));
         } catch (err) {
             console.error('Mock folder not found! something is wrong');
             throw err;
@@ -66,7 +67,8 @@ describe('DELETE api/media', () => {
             .expect(200)
             .end((err, res) => {
                 if (err) return done(err);
-                expect(res.body).to.be.an('object')
+                expect(res.body)
+                    .to.be.an('object')
                     .to.haveOwnProperty('name')
                     .to.be.equal('mocks/sakuras_small.jpg');
                 done();
@@ -81,7 +83,8 @@ describe('DELETE api/media', () => {
             .expect(200)
             .end((err, res) => {
                 if (err) return done(err);
-                expect(res.body).to.be.an('object')
+                expect(res.body)
+                    .to.be.an('object')
                     .to.haveOwnProperty('name')
                     .to.be.equal('mocks/empty');
                 done();
@@ -96,7 +99,8 @@ describe('DELETE api/media', () => {
             .expect(200)
             .end((err, res) => {
                 if (err) return done(err);
-                expect(res.body).to.be.an('object')
+                expect(res.body)
+                    .to.be.an('object')
                     .to.haveOwnProperty('name')
                     .to.be.equal('mocks/venice');
                 done();

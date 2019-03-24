@@ -8,10 +8,12 @@ const morgan = require('morgan');
 const glob = require('glob');
 const fs = require('fs');
 const fse = require('fs-extra');
+const path = require('path');
 const urlParse = require('url').parse;
 
 const stats = require('./stat');
 const mimetypes = require('./mimetypes');
+const imgRouter = require('./img-files');
 
 const API_MEDIA_URL = process.env.API_MEDIA_URL;
 const STORAGE_FOLDER = process.env.STORAGE_FOLDER;
@@ -80,29 +82,14 @@ const corsOptions = {
 
 const app = express();
 
+app.use((req, res, next) => {
+    console.log(' ------- begin request --------');
+    next();
+});
 app.use(morgan(process.env.MORGAN_LOG_TYPE || 'combined'));
 app.use(bodyParser.json());
 app.use(cors(corsOptions));
-// TODO: add serve-static middleware to serve the static files ( https://github.com/expressjs/serve-static )
-
-app.all(API_MEDIA_URL + '*', (req, res) => {
-    // this is the path without API_MEDIA_URL sufix
-    let maskedPath = req.url.substr(API_MEDIA_URL.length + 1);
-
-    // this normalizes the trailing slash on root.
-    maskedPath = maskedPath === '/' ? '' : maskedPath;
-
-    // path of the resource in the file system
-    req.fsPath = STORAGE_FOLDER + maskedPath;
-    req.maskedPath = maskedPath;
-
-    // if no file and no dir exist, return 404
-    if (!fs.existsSync(req.fsPath)) {
-        return res.status(404).json();
-    }
-
-    return req.next();
-});
+app.use(API_MEDIA_URL, imgRouter);
 
 app.post(API_MEDIA_URL + '*', upHandler.single('uploaded_file'), (req, res) => {
     // If this is just regular json skip this and go on to the next middleware
@@ -143,10 +130,13 @@ app.get(API_MEDIA_URL + '*', (req, res) => {
             cwd: STORAGE_FOLDER,
         },
         (err, files) => {
+            if (err) {
+                req.next(err);
+            }
             res.status(200).json(
                 files
-                    .map((file) => {
-                        const relativeStoragePath = STORAGE_FOLDER + file;
+                    .map(file => {
+                        const relativeStoragePath = path.join(STORAGE_FOLDER, file);
                         return stats.fileInfo(relativeStoragePath);
                     })
                     .filter(file => mimetypes.isListableMimeType(file.mimetype))
@@ -182,7 +172,7 @@ app.post(API_MEDIA_URL + '*', (req, res) => {
         return;
     }
 
-    const newFolderPath = STORAGE_FOLDER + maskedPath + newFolderName;
+    const newFolderPath = path.join(STORAGE_FOLDER, maskedPath, newFolderName);
 
     // existing folders can't be created again
     if (stats.isDirectorySync(newFolderPath)) {
