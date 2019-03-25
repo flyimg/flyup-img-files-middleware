@@ -1,6 +1,6 @@
 const request = require('supertest');
-const app = require('../../../server/app');
 const expect = require('chai').expect;
+const app = require('../../../server/app');
 
 describe('GET api/media + sub folders and sub files', () => {
     it('should return the root folder´s content listed, with the mocks directory at least.', done => {

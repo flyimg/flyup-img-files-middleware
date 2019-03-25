@@ -6,12 +6,12 @@ const fse = require('fs-extra');
 const path = require('path');
 const app = require('../../../server/app');
 
-const STORAGE_FOLDER = process.env.STORAGE_FOLDER;
+const STORAGE_DIR = process.env.STORAGE_DIR;
 
 describe('DELETE api/media', () => {
     before(() => {
         try {
-            fse.removeSync(path.join(STORAGE_FOLDER, 'mocks/.gitkeep'));
+            fse.removeSync(path.join(STORAGE_DIR, 'mocks/.gitkeep'));
         } catch (err) {
             console.error('Mock folder not found! something is wrong');
             throw err;

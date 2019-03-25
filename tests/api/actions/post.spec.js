@@ -1,6 +1,6 @@
 const request = require('supertest');
-const app = require('../../../server/app');
 const expect = require('chai').expect;
+const app = require('../../../server/app');
 
 describe('POST /api/media', () => {
     it('should create a new folder "italy" in the root folder. And respond with an object with the name', done => {
