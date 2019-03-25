@@ -24,10 +24,6 @@ const corsOptions = {
 
 const app = express();
 
-app.use((req, res, next) => {
-    console.log(' ------- begin request --------');
-    next();
-});
 app.use(morgan(process.env.MORGAN_LOG_TYPE || 'combined'));
 app.use(bodyParser.json());
 app.use(cors(corsOptions));

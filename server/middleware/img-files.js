@@ -19,7 +19,6 @@ const contentTypes = {
 };
 
 imgRouter.all('*', (req, res, next) => {
-    console.log('hello from router', req.path);
     // get the relative path, remove the prefix
     let maskedPath = req.path.substr(1);
 
