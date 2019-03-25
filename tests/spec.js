@@ -2,7 +2,7 @@ require('dotenv').config();
 const fs = require('fs');
 const fse = require('fs-extra');
 const path = require('path');
-const stat = require('../server/stat');
+const stat = require('../server/middleware/file-handling/stat');
 
 const STORAGE_FOLDER = process.env.STORAGE_FOLDER;
 const MOCKS_DIR = process.env.MOCKS_DIR;
