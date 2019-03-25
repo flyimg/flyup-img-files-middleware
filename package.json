@@ -3,9 +3,10 @@
     "version": "1.0.0",
     "description": "Image upload and image managing server express middleware.",
     "repository": {
-        "url": "https://github.com/baamenabar/flyup-img-files-middleware"
+        "type": "git",
+        "url": "git+https://github.com/baamenabar/flyup-img-files-middleware.git"
     },
-    "main": "server/img-files.js",
+    "main": "server/middleware/img-files.js",
     "scripts": {
         "start": "node server/app.js -w server/",
         "start:dev": "nodemon server/app.js -w server/",
