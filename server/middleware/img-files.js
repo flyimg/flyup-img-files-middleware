@@ -11,8 +11,10 @@ const stats = require('./file-handling/stat');
 
 const imgRouter = express.Router();
 
-const STORAGE_FOLDER = process.env.STORAGE_FOLDER;
+// storage directory defaults to 'uploads'
+const STORAGE_DIR = process.env.STORAGE_DIR || 'uploads';
 
+// these are just content-types we reuse throughout the router.
 const contentTypes = {
     appJson: 'application/json',
     multipart: 'multipart/form-data;',
@@ -26,7 +28,7 @@ imgRouter.all('*', (req, res, next) => {
     maskedPath = maskedPath === '/' ? '' : maskedPath;
 
     // path of the resource in the file system
-    req.fsPath = path.join(STORAGE_FOLDER, maskedPath);
+    req.fsPath = path.join(STORAGE_DIR, maskedPath);
     req.maskedPath = maskedPath;
 
     // if no file and no dir exist, return 404
@@ -73,7 +75,7 @@ imgRouter.get('*', (req, res, next) => {
     glob(
         maskedPath + '*',
         {
-            cwd: STORAGE_FOLDER,
+            cwd: STORAGE_DIR,
         },
         (err, files) => {
             if (err) {
@@ -82,7 +84,7 @@ imgRouter.get('*', (req, res, next) => {
             res.status(200).json(
                 files
                     .map(file => {
-                        const relativeStoragePath = path.join(STORAGE_FOLDER, file);
+                        const relativeStoragePath = path.join(STORAGE_DIR, file);
                         return stats.fileInfo(relativeStoragePath);
                     })
                     .filter(file => mimetypes.isListableMimeType(file.mimetype))
@@ -118,7 +120,7 @@ imgRouter.post('*', (req, res) => {
         return;
     }
 
-    const newFolderPath = path.join(STORAGE_FOLDER, maskedPath, newFolderName);
+    const newFolderPath = path.join(STORAGE_DIR, maskedPath, newFolderName);
 
     // existing folders can't be created again
     if (stats.isDirectorySync(newFolderPath)) {

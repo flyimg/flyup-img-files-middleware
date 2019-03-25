@@ -1,9 +1,9 @@
 {
-    "name": "flyup",
+    "name": "flyup-img-files-middleware",
     "version": "1.0.0",
     "description": "Image upload and image managing server express middleware.",
     "repository": {
-        "url": "https://github.com/baamenabar/flyup"
+        "url": "https://github.com/baamenabar/flyup-img-files-middleware"
     },
     "main": "server/img-files.js",
     "scripts": {
@@ -20,7 +20,7 @@
         "flyimg"
     ],
     "author": "B. Agustin Amenabar L.",
-    "license": "ISC",
+    "license": "MIT",
     "dependencies": {
         "body-parser": "^1.18.3",
         "cors": "^2.8.4",

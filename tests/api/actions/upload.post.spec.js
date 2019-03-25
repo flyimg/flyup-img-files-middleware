@@ -7,7 +7,7 @@ const fse = require('fs-extra');
 const path = require('path');
 const app = require('../../../server/app');
 
-const STORAGE_FOLDER = process.env.STORAGE_FOLDER;
+const STORAGE_DIR = process.env.STORAGE_DIR;
 // fixtures/Acaena-argenta__small.jpg
 
 describe('UPLOADS to /api/media', () => {
@@ -101,7 +101,7 @@ describe('UPLOADS to /api/media', () => {
                 // we copy a first image to where the we want to upload the second image, also renaming it to match the second one.
                 fse.copyFileSync(
                     'tests/fixtures/Acaena-argenta__small.jpg',
-                    path.join(STORAGE_FOLDER, 'mocks/venice/cactus-flower_h300.jpg')
+                    path.join(STORAGE_DIR, 'mocks/venice/cactus-flower_h300.jpg')
                 );
             } catch (err) {
                 console.error('Mock folder or target folder not found! something is wrong');
@@ -109,7 +109,7 @@ describe('UPLOADS to /api/media', () => {
             }
             // we store the size of the first image
             const originalFileSize = fse.statSync(
-                path.join(STORAGE_FOLDER, 'mocks/venice/cactus-flower_h300.jpg')
+                path.join(STORAGE_DIR, 'mocks/venice/cactus-flower_h300.jpg')
             ).size;
             const agent = request(app);
             agent
@@ -121,7 +121,7 @@ describe('UPLOADS to /api/media', () => {
                     if (err) return done(err);
                     expect(res.body).to.be.an('object');
                     const finalFileSize = fse.statSync(
-                        path.join(STORAGE_FOLDER, 'mocks/cactus-flower_h300.jpg')
+                        path.join(STORAGE_DIR, 'mocks/cactus-flower_h300.jpg')
                     ).size;
                     expect(originalFileSize).to.be.above(finalFileSize);
                     done();
